@@ -1,0 +1,40 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<script>
+var entries = [];
+{% for entry in needed_entries %}
+var found = false;
+for(var i in entries)
+{
+	if(entries[i].Name == "{{entry.employee.name}}")
+	{
+		entries[i].Entries.push({Date: "{{entry.date}}", Hours: {{entry.reg}}});
+		found = true;
+	}
+}
+if(!found)
+{
+	entries.push(
+		{
+			Name: "{{entry.employee.name}}", Entries: [{Date: "{{entry.date}}", Hours: {{entry.reg}}}]
+		});
+}
+{% endfor %}
+</script>
+<div id="output" class="container">
+</div>
+<script>
+for (var i in entries)
+{
+	document.getElementById("output").innerHTML+="<b><u>" + entries[i].Name + "</u></b><br>";
+	var total = 0;
+	for(var j in entries[i].Entries)
+	{
+		document.getElementById("output").innerHTML+=entries[i].Entries[j].Date + ": " + entries[i].Entries[j].Hours/8 + "<br>";
+		total += entries[i].Entries[j].Hours/8;
+	}
+	document.getElementById("output").innerHTML+="Total: " + total + "<br><br>";
+}
+</script>
+{% endblock %}

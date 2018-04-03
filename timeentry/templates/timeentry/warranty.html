@@ -1,0 +1,17 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<div class="container">
+	<div style="text-align:center"><b>Warranty Entries Between {{first_date}} and {{last_date}}</b></div>
+	<br><br>
+	<table>
+		<th>Job</th><th>Reg</th><th>OT</th><th>DT</th><th>Employee</th>
+{% for entry in needed_entries %}
+<tr>
+<td>{{entry.note}}</td><td>{{entry.reg}}</td><td>{{entry.ot}}</td><td>{{entry.dt}}</td><td>{{entry.employee.name}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

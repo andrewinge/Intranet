@@ -1,0 +1,32 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<div class="container">
+Choose Week Ending Date (Pick a Wednesday for viewing pay period)<br>
+
+<form id="gobutton" action="">
+<input id="month" onchange="updateLink()" style="width: 40px;" type="number" pattern="\d*">/</input>
+<input id="day" onchange="updateLink()" style="width: 40px" type="number" pattern="\d*">/</input>
+<input id="year" onchange="updateLink()" style="width: 60px" type="number" pattern="\d*"></input>
+<select id="dept" onchange="updateLink()">
+	{% for department in all_departments %}
+	<option value={{department.id}}>{{department.name}}</option>
+	{% endfor %}
+</select>
+    <input type="submit" value="Go" />
+</form>
+</div>
+<script>
+document.getElementById("year").value=new Date().getFullYear()
+function updateLink(){	
+	var url_mask = "{% url 'deptcheck' 5555 8888 7777 6666 %}";
+	url_mask = url_mask.replace(8888, document.getElementById("year").value.toString())
+	url_mask = url_mask.replace(7777, document.getElementById("month").value.toString())
+	url_mask = url_mask.replace(6666, document.getElementById("day").value.toString())
+	url_mask = url_mask.replace(5555, document.getElementById("dept").value.toString())
+	//document.getElementById("gobutton").action="http://192.168.0.155:8000/timeentry/summary/"+document.getElementById("jobs").value;
+	document.getElementById("gobutton").action=url_mask;
+}
+</script>
+{% endblock %}

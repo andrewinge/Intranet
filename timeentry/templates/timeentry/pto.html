@@ -1,0 +1,18 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<script>var used = 0;</script>
+{% for employee in needed_employee %}
+<script>var max = {{employee.pto}}</script>
+<div class="container">
+{% endfor %}
+{% for entry in needed_entries %}
+{{entry.date}} - {{entry.reg}}<br>
+<script>used+={{entry.reg}};</script>
+{% endfor %}
+<div id="total"></div>
+</div>
+<script>
+document.getElementById("total").innerHTML=used+" hours = " + used/8 + " days out of " + max + " allowed.";
+</script>
+{% endblock %}

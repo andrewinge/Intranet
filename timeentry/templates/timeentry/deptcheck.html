@@ -1,0 +1,222 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<div id="test">
+</div>
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<div class="container">
+	<p style="text-align:center;"><u><b>{% for department in departmentname %}  
+	{{department.name}} Department for week ending {{last_date}}
+	{% endfor %}
+</u></b></p>
+<div id="output">
+</div>
+<form class="form-horizontal" method="post">{% csrf_token %}
+    <fieldset>
+        <legend>{{ title }}</legend>
+        {% for field in form %}
+            {% if field.errors %}
+                <div class="control-group error">
+                    <label class="control-label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        <span class="help-inline">
+                            {% for error in  field.errors %}{{ error }}{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="control-group">
+                    <label class="control-label" id="{{field.label}}_label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        {% if field.help_text %}
+                            <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+<br>
+    <div class="form-actions">
+
+{% for check in needed_checks %}
+Previously checked by {{check.checkedby}} on {{check.date}}<br>
+{% endfor %}
+        <button type="submit" class="btn btn-primary" >Submit</button>
+    </div>
+</form>
+<script>
+document.getElementById("id_checkedby").setAttribute("oninput", "setparameters()");
+var entries = [];
+var employees = [];
+</script>
+<script>
+{% for entry in needed_entries %}
+found = false;
+for(var i in entries)
+{
+	if(entries[i].Employee == "{{entry.employee.name}}")
+	{
+		found = true;
+	}
+}
+if(!found)
+{
+	entries.push({
+		Employee: "{{entry.employee.name}}",
+		Entries: [],
+		Reg: 0,
+		OT: 0,
+		DT: 0,
+		ClockIns: [],
+		MinutesDay: []
+	});
+}
+{% endfor %}
+</script>
+<script>
+{% for clockin in needed_clockins %}
+for(var i in entries)
+{
+	if(entries[i].Employee == "{{clockin.employee.name}}")
+	{
+		entries[i].ClockIns.push({Date: "{{clockin.time|date:"D"}}", Time: {{clockin.time|date:"U"}}, ID: {{clockin.id}}, PrettyTime: "{{clockin.time|date:"H"}}:{{clockin.time|date:"i"}}"});
+	}
+}
+{% endfor %}
+</script>
+<script>
+for(var i in entries)
+{
+	for(j = 0; j<entries[i].ClockIns.length-1; j+=2)
+	{
+		if(entries[i].ClockIns[j].Date == entries[i].ClockIns[j+1].Date)
+		{
+			var found = false;
+			for(var k in entries[i].MinutesDay)
+			{
+				if(entries[i].MinutesDay[k].Day == entries[i].ClockIns[j].Date)
+				{
+					found = true;
+					entries[i].MinutesDay[k].Time += (parseInt(entries[i].ClockIns[j+1].Time) - parseInt(entries[i].ClockIns[j].Time))/60;
+				}
+			}
+			if(!found)
+			{
+				entries[i].MinutesDay.push({Day: entries[i].ClockIns[j].Date, Time: (parseInt(entries[i].ClockIns[j+1].Time) - parseInt(entries[i].ClockIns[j].Time))/60});
+			}
+		}
+		else
+		{
+			j-=1;
+		}
+	}
+}
+</script>
+{% for entry in needed_entries %}
+<script>
+for(var i in entries)
+{
+	if(entries[i].Employee == "{{entry.employee.name}}")
+	{
+		entries[i].Entries.push({
+			JobNum: {{entry.job.number}},
+			JobName: "{{entry.job.name}}",
+			Category: "{{entry.category}}",
+			Task: "{{entry.task}}",
+			Reg: {{entry.reg}},
+			OT: {{entry.ot}},
+			DT: {{entry.dt}},
+			Date: "{{ entry.date|date:"D" }}",
+			Link: "{% url 'entry-edit' entry.id %}" 
+		});
+		entries[i].Reg += {{entry.reg}};
+		entries[i].OT += {{entry.ot}};
+		entries[i].DT += {{entry.dt}};
+	}
+}
+</script>
+{% endfor %}
+<script>
+document.getElementById("id_department").style.display="none";
+document.getElementById("id_date").style.display="none";
+document.getElementById("Department_label").style.display="none";
+document.getElementById("Date_label").style.display="none";
+document.getElementById("Checkedby_label").innerHTML="Checked By:";
+
+function setparameters(){
+	document.getElementById("id_department").value={{department}};
+}
+
+function makeRow(person,entry, clocked){
+	var row = table.insertRow(-1);
+	var cell1 = row.insertCell(-1); //Day
+	var cell2 = row.insertCell(-1); //Reg
+	var cell3 = row.insertCell(-1); //OT
+	var cell4 = row.insertCell(-1); //DT
+	var cell5 = row.insertCell(-1); //Job
+	var cell6 = row.insertCell(-1); //Category
+	var cell7 = row.insertCell(-1); //Task
+	var cell8 = row.insertCell(-1); //Clocked
+	var cell9 = row.insertCell(-1); //Edit
+	cell1.innerHTML=entries[person].Entries[entry].Date;
+	cell2.innerHTML=entries[person].Entries[entry].Reg;
+	cell3.innerHTML=entries[person].Entries[entry].OT;
+	cell4.innerHTML=entries[person].Entries[entry].DT;
+	cell5.innerHTML=entries[person].Entries[entry].JobNum + " " + entries[person].Entries[entry].JobName ;
+	cell6.innerHTML=entries[person].Entries[entry].Category;
+	cell7.innerHTML=entries[person].Entries[entry].Task;
+	cell8.innerHTML=(clocked/60).toFixed(2);
+	cell9.innerHTML="<a href='"+entries[person].Entries[entry].Link+"'>Edit</a>";
+}	
+
+function headerRow(){
+	var row = table.insertRow(-1);
+	var cell1 = row.insertCell(-1); //Day
+	var cell2 = row.insertCell(-1); //Reg
+	var cell3 = row.insertCell(-1); //OT
+	var cell4 = row.insertCell(-1); //DT
+	var cell5 = row.insertCell(-1); //Job
+	var cell6 = row.insertCell(-1); //Category
+	var cell7 = row.insertCell(-1); //Task
+	var cell8 = row.insertCell(-1); //Clocked
+	var cell9 = row.insertCell(-1); //Clocked
+	cell1.innerHTML="<b>Date</b>";
+	cell2.innerHTML="<b>Reg</b>";
+	cell3.innerHTML="<b>OT</b>";
+	cell4.innerHTML="<b>DT</b>";
+	cell5.innerHTML="<b>Job</b>";
+	cell6.innerHTML="<b>Cat</b>";
+	cell7.innerHTML="<b>Task</b>";
+	cell8.innerHTML="<b>Clocked</b>";
+	cell9.innerHTML="<b>Edit</b>";
+}
+for(var i in entries)
+{
+	document.getElementById("output").innerHTML+="<br><br><b>" + entries[i].Employee + "</b><br>";
+	var table = document.createElement("TABLE");
+	headerRow();
+	for(var j in entries[i].Entries)
+	{
+		var clocked = 0;
+		for(var k in entries[i].MinutesDay)
+		{
+			if(entries[i].MinutesDay[k].Day == entries[i].Entries[j].Date)
+			{
+				clocked = entries[i].MinutesDay[k].Time;
+			}
+		}
+		makeRow(i,j,clocked);
+
+	}	
+	document.getElementById("output").appendChild(table);
+	document.getElementById("output").innerHTML+="<b>Reg: " + entries[i].Reg + " | OT: " + entries[i].OT + " | DT: " + entries[i].DT+"<br>";
+
+	for(var j in entries[i].ClockIns)
+	{
+		document.getElementById("output").innerHTML+=entries[i].ClockIns[j].Date + " " + entries[i].ClockIns[j].PrettyTime+ "<br>";
+	}
+}
+</script>
+
+{% endblock %}

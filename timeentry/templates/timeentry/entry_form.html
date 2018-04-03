@@ -1,0 +1,149 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<script>
+var jobs = [];
+var activeJobs = [];
+</script>
+{% for job in active_jobs %}
+<script>
+activeJobs.push("{{job.number}}");
+</script>
+{% endfor %}
+{% for job in active_jobs %}
+<script>
+jobs.push({Job: {{job.number}}, V1: "{{job.v1}}", V2: "{{job.v2}}",V3: "{{job.v3}}",H1: "{{job.h1}}",H2: "{{job.h2}}",H3: "{{job.h3}}",F1: "{{job.f1}}",F2: "{{job.f2}}",F3: "{{job.f3}}", Active: "{{job.isActive}}"});
+</script>
+{% endfor %}
+<div class="container">	
+<form class="form-horizontal" method="post">{% csrf_token %}
+    <fieldset>
+        <legend>
+{{title}}{{title2}}</legend>
+
+<b>Employee #</b><br><input id="emp" type="number" onchange="findemployee();" style="width:4em;"></input><br>
+<b>Job #</b><br><input id="jobin" type="number" onchange="changejob(); narrowCategories();" style="width:4em;"></input>
+        {% for field in form %}
+            {% if field.errors %}
+                <div class="control-group error">
+                    <label class="control-label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        <span class="help-inline">
+                            {% for error in  field.errors %}{{ error }}{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="control-group">
+                    <label class="control-label" id="{{field.label}}_label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        {% if field.help_text %}
+                            <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+    <div class="form-actions"><br>
+        <button type="submit" class="btn btn-primary" >Submit</button>
+    </div>
+</form>
+</div>
+<div id="test1"></div>
+<div id="test2"></div>
+<script>
+document.getElementById("emp").focus();
+var op = document.getElementById("id_category").getElementsByTagName("option");
+var empop = document.getElementById("id_employee").getElementsByTagName("option");
+var jobop = document.getElementById("id_job").getElementsByTagName("option");
+document.getElementById("id_job").setAttribute("onchange", "narrowCategories()");
+document.getElementById("id_note").style.display="none";
+document.getElementById("Note_label").style.display="none";
+var activeJob = 0;
+var job = 0;
+
+for(var i in jobop)
+{
+    found = false;
+    for(var j in activeJobs)
+    {
+        if(activeJobs[j]==jobop[i].value)
+        {
+            found=true;
+        }
+    }
+    if(found==false)
+    {
+        jobop[i].disabled=true;
+    }
+}
+function changejob(){
+	document.getElementById("id_job").value=document.getElementById("jobin").value;
+}
+function findemployee(){
+    console.log(document.getElementById("emp").value.length);
+    for(var i in empop)
+    {
+        if(parseInt(empop[i].value)>0)
+        {
+            if(empop[i].text.substr(0,document.getElementById("emp").value.length) == document.getElementById("emp").value && empop[i].text[document.getElementById("emp").value.length] == " ")
+            {
+                console.log("hey");
+                empop[i].selected=true;
+            }
+        }
+    }
+}
+
+function narrowCategories()
+{
+	activeJob = document.getElementById("id_job").value;
+	if(activeJob == "100")
+	{		
+	document.getElementById("id_note").style.display="inline";
+	document.getElementById("Note_label").style.display="inline";
+	document.getElementById("Note_label").innerHTML="Warranty Job";    
+    document.getElementById("id_note").focus();
+	}
+
+	if(activeJob == "150")
+	{		
+	document.getElementById("id_note").style.display="inline";
+	document.getElementById("Note_label").style.display="inline";
+	document.getElementById("Note_label").innerHTML="Inventory Job";    
+    document.getElementById("id_note").focus();
+	}
+	for(var i in jobs)
+	{
+		if(jobs[i].Job==activeJob)
+		{
+			if(jobs[i].V1=="False"){for(var j in op){if(op[j].innerHTML=="V1"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="V1"){op[j].disabled=false;}}}			
+			if(jobs[i].V2=="False"){for(var j in op){if(op[j].innerHTML=="V2"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="V2"){op[j].disabled=false;}}}	
+			if(jobs[i].V3=="False"){for(var j in op){if(op[j].innerHTML=="V3"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="V3"){op[j].disabled=false;}}}
+			if(jobs[i].H1=="False"){for(var j in op){if(op[j].innerHTML=="H1"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="H1"){op[j].disabled=false;}}}			
+			if(jobs[i].H2=="False"){for(var j in op){if(op[j].innerHTML=="H2"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="H2"){op[j].disabled=false;}}}	
+			if(jobs[i].H3=="False"){for(var j in op){if(op[j].innerHTML=="H3"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="H3"){op[j].disabled=false;}}}
+			if(jobs[i].F1=="False"){for(var j in op){if(op[j].innerHTML=="F1"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="F1"){op[j].disabled=false;}}}			
+			if(jobs[i].F2=="False"){for(var j in op){if(op[j].innerHTML=="F2"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="F2"){op[j].disabled=false;}}}	
+			if(jobs[i].F3=="False"){for(var j in op){if(op[j].innerHTML=="F3"){op[j].disabled=true;}}}
+			else{for(var j in op){if(op[j].innerHTML=="F3"){op[j].disabled=false;}}}
+            for(var j in op){
+                if(op[j].innerHTML=="S1"){op[j].disabled=true;}
+                if(op[j].innerHTML=="S2"){op[j].disabled=true;}
+                if(op[j].innerHTML=="S3"){op[j].disabled=true;}
+            }          
+		}
+	}
+}
+</script>
+{% endblock %}

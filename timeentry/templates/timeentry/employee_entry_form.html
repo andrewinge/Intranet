@@ -1,0 +1,250 @@
+{% extends 'timeentry/empbase.html' %}
+{% block body %}
+<script
+  src="http://code.jquery.com/jquery-3.1.1.js"
+  integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+  crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+{% load staticfiles %}
+
+<style>
+body{
+    font-size:2.7em;
+}
+select {
+  width:200px;
+}
+.btn-primary {
+    width:300px;
+    height:50px;
+    font-size:1em;
+}
+</style>
+<script>
+var jobs = [];
+var activeJobs = [];
+</script>
+{% for job in active_jobs %}
+<script>
+activeJobs.push("{{job.number}}");
+</script>
+{% endfor %}
+{% for job in active_jobs %}
+<script>
+jobs.push({Job: {{job.number}}, V1: "{{job.v1}}", V2: "{{job.v2}}",V3: "{{job.v3}}",H1: "{{job.h1}}",H2: "{{job.h2}}",H3: "{{job.h3}}",F1: "{{job.f1}}",F2: "{{job.f2}}",F3: "{{job.f3}}", Active: "{{job.isActive}}"});
+</script>
+{% endfor %}
+<div class="container"> 
+    <div id="empname"></div>
+<form class="form-horizontal" method="post">{% csrf_token %}
+    <fieldset>
+        <legend>
+{{title}}{{title2}}</legend>
+
+<b>Employee #</b><br><input id="emp" type="number" onchange="findemployee();" style="width:4em;"></input><br>
+        {% for field in form %}
+            {% if field.errors %}
+                <div class="control-group error">
+                    <label class="control-label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        <span class="help-inline">
+                            {% for error in  field.errors %}{{ error }}{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="control-group">
+                    <label class="control-label" id="{{field.label}}_label">{{ field.label }}</label> 
+                    <div class="controls">{{ field }}
+                        {% if field.help_text %}
+                            <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+    <div class="form-actions"><br>
+        <button type="submit" class="btn btn-primary" >Submit</button>
+    </div>
+</form>
+</div>
+<div id="test1"></div>
+<div id="test2"></div>
+<script>
+var op = document.getElementById("id_category").getElementsByTagName("option");
+var empop = document.getElementById("id_employee").getElementsByTagName("option");
+var jobop = document.getElementById("id_job").getElementsByTagName("option");
+var taskop = document.getElementById("id_task").getElementsByTagName("option");
+document.getElementById("id_job").setAttribute("onchange", "narrowCategories()");
+document.getElementById("id_category").setAttribute("onchange", "narrowTasks()");
+document.getElementById("id_note").style.display="none";
+document.getElementById("Note_label").style.display="none";
+document.getElementById("Employee_label").style.display="none";
+document.getElementById("id_employee").style.display="none";
+document.getElementById("id_reg").onclick = (function() {
+                return function() { 
+                    this.focus();
+                    this.select();
+                }
+            })();
+
+document.getElementById("id_ot").onclick = (function() {
+                return function() { 
+                    this.focus();
+                    this.select();
+                }
+            })();
+
+document.getElementById("id_dt").onclick = (function() {
+                return function() { 
+                    this.focus();
+                    this.select();
+                }
+            })();
+var activeJob = 0;
+var job = 0;
+function findemployee(){
+    console.log(document.getElementById("emp").value.length);
+    for(var i in empop)
+    {
+        if(parseInt(empop[i].value)>0)
+        {
+            if(empop[i].text.substr(0,document.getElementById("emp").value.length) == document.getElementById("emp").value && empop[i].text[document.getElementById("emp").value.length] == " ")
+            {
+                empop[i].selected=true;
+                document.getElementById("empname").innerHTML = empop[i].text;
+            }
+        }
+    }
+    if(document.getElementById("empname").innerHTML=="")
+    {
+        document.getElementById("empname").innerHTML="Employee Not Found";
+    }
+}
+
+function narrowCategories()
+{
+    activeJob = document.getElementById("id_job").value;
+    if(activeJob == "100")
+    {       
+    document.getElementById("id_note").style.display="inline";
+    document.getElementById("Note_label").style.display="inline";
+    document.getElementById("Note_label").innerHTML="Warranty Job";    
+    document.getElementById("id_note").focus();
+    }
+
+    if(activeJob == "150")
+    {       
+    document.getElementById("id_note").style.display="inline";
+    document.getElementById("Note_label").style.display="inline";
+    document.getElementById("Note_label").innerHTML="Inventory Job";    
+    document.getElementById("id_note").focus();
+    }
+    for(var i in jobs)
+    {
+        if(jobs[i].Job==activeJob)
+        {
+            if(jobs[i].V1=="False"){for(var j in op){if(op[j].innerHTML=="V1"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="V1"){op[j].disabled=false;}}}            
+            if(jobs[i].V2=="False"){for(var j in op){if(op[j].innerHTML=="V2"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="V2"){op[j].disabled=false;}}}    
+            if(jobs[i].V3=="False"){for(var j in op){if(op[j].innerHTML=="V3"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="V3"){op[j].disabled=false;}}}
+            if(jobs[i].H1=="False"){for(var j in op){if(op[j].innerHTML=="H1"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="H1"){op[j].disabled=false;}}}            
+            if(jobs[i].H2=="False"){for(var j in op){if(op[j].innerHTML=="H2"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="H2"){op[j].disabled=false;}}}    
+            if(jobs[i].H3=="False"){for(var j in op){if(op[j].innerHTML=="H3"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="H3"){op[j].disabled=false;}}}
+            if(jobs[i].F1=="False"){for(var j in op){if(op[j].innerHTML=="F1"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="F1"){op[j].disabled=false;}}}            
+            if(jobs[i].F2=="False"){for(var j in op){if(op[j].innerHTML=="F2"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="F2"){op[j].disabled=false;}}}    
+            if(jobs[i].F3=="False"){for(var j in op){if(op[j].innerHTML=="F3"){op[j].disabled=true;}}}
+            else{for(var j in op){if(op[j].innerHTML=="F3"){op[j].disabled=false;}}}
+            for(var j in op){
+                if(op[j].innerHTML=="S1"){op[j].disabled=true;}
+                if(op[j].innerHTML=="S2"){op[j].disabled=true;}
+                if(op[j].innerHTML=="S3"){op[j].disabled=true;}
+            }          
+        }
+    }
+    if(document.getElementById("id_job").value < 3000 || document.getElementById("id_job").value > 10000)
+    {
+        document.getElementById("id_task").value=1;
+        document.getElementById("id_category").value=3;
+        if(document.getElementById("id_job").value == 100)
+        {
+            document.getElementById("id_category").value=10;
+        }
+    }
+    narrowTasks();
+}
+function narrowTasks()
+{
+    if(parseInt(document.getElementById("id_job").value) > 150)
+    {
+
+    for(var i in taskop)
+        {
+            if(taskop[i].text == "LTSP Lost Time" || taskop[i].text == "LER Equipment Repair" || taskop[i].text == "LRM LRM" || taskop[i].text == "PTO" || taskop[i].text == "PTS Parts" || taskop[i].text == "SS Shop Supervision" || taskop[i].text == "Service Service")
+            {
+                taskop[i].disabled=true;
+            }
+        }
+    }
+    if(document.getElementById("id_category").value == "1" || document.getElementById("id_category").value == "4" || document.getElementById("id_category").value == "5")
+    {
+        for(var i in taskop)
+        {
+            var num = taskop[i].text[2] + taskop[i].text[3];
+            var ncnum = taskop[i].text[3] + taskop[i].text[4];
+            if(parseInt(num)>19 || parseInt(ncnum)>19)
+            {
+                taskop[i].disabled=true;
+            }
+            else if(taskop[i].text == "LTSP Lost Time" || taskop[i].text == "LER Equipment Repair" || taskop[i].text == "LRM LRM" || taskop[i].text == "PTO" || taskop[i].text == "PTS Parts" || taskop[i].text == "SS Shop Supervision" || taskop[i].text == "Service Service")
+            {
+                taskop[i].disabled=true;
+            }
+            else
+            {
+                taskop[i].disabled=false;
+            }
+        }
+    }
+    else if(document.getElementById("id_category").value == "2" || document.getElementById("id_category").value == "6" || document.getElementById("id_category").value == "7")
+    {
+        for(var i in taskop)
+        {
+            console.log(taskop[i].text);
+            var num = taskop[i].text[2] + taskop[i].text[3];
+            var ncnum = taskop[i].text[3] + taskop[i].text[4];
+            if(parseInt(num)>19 || parseInt(ncnum)>19)
+            {
+                taskop[i].disabled=false;
+            }
+            else
+            {
+                taskop[i].disabled=true;
+            }
+        }
+    }
+    else
+    {
+        for(var i in taskop)
+        {
+            taskop[i].disabled=false;
+        }
+    }
+}
+</script>
+<script>
+flatpickr("#id_date", {});
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% load staticfiles %}
+<script
+  src="http://code.jquery.com/jquery-3.1.1.js"
+  integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+  crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+   <div class="container">
+
+      <!-- Static navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Foley Material Handling</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav"> 
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Hour Reports
+                <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'selection' %}">Hours Summary</a></li>
+                  <li><a href="{% url 'vmsselect' %}">VMS</a></li>       
+                  <li><a href="{% url 'gillmanselect' %}">Gillman</a></li>  
+                  <li><a href="{% url 'aerotekselect' %}">Aerotek</a></li>            
+                  <li><a href="{% url 'timecardselection' %}">Time Cards</a></li>   
+                  <li><a href="{% url 'ltspselect' %}">LTSP</a></li>
+                  <li><a href="{% url 'workedselect' %}">Work Summary</a></li>
+                  <li><a href="{% url 'fworkedselect' %}">Foreman Work Summary</a></li>
+                  <li><a href="{% url 'ptoselection' %}">PTO</a></li>
+                  <li><a href="{% url 'warrantyselect' %}">Warranty</a></li>
+                  <li><a href="{% url 'allptoselect' %}">PTO Summary</a></li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">PROTO
+                <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'protoCreate' %}">PROTO Entry</a></li>
+                  <li><a href="{% url 'protoSelect' %}">PROTO Report</a></li>
+                </ul>
+              </li>
+                  <li><a href="{% url 'selfentry' %}">Time Entry</a></li>
+                  <li><a href="{% url 'clockin' %}">Clock In/Out</a></li>
+                  <li class="dropdown">
+                {% if user.is_staff %}
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin
+                <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url 'employeeCreate' %}">Add Employee</a></li>
+                  <li><a href="{% url 'employeeselection' %}">Edit Employee</a></li>
+                  <li><a href="{% url 'jobCreate' %}">Add Job</a></li>
+                  <li><a href="{% url 'jobselection' %}">Edit Job</a></li>
+                  <li><a href="{% url 'customerCreate' %}">Add Customer</a></li>
+                  <li><a href="{% url 'deptcheckselect' %}">Department Check</a></li>
+                  <li><a href="{% url 'clockin-manual' %}">Add Clock-In Manually</a></li>
+                </ul>
+                {% endif %}
+              </li>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">  
+          {% if user.is_active %}
+          <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% else %}
+          <li><a href="{% url 'login' %}">Login</a></li>
+          {% endif %}
+      
+    </ul>
+          </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+</div>
+
+
+{% block body %}
+{% endblock %}

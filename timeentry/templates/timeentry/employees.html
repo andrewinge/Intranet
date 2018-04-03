@@ -1,0 +1,40 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+<div class="container">
+Select an employee: 
+<select id="employees" onchange="updateLink()">
+{% for employee in all_employees %}
+<option value="{{employee.number}}">{{employee.number}} - {{employee.name}}</option>
+{% endfor %}
+</select>
+<br><br><br>
+<form id="gobutton" action="http://google.com">
+    <input type="submit" value="View Timecard" />
+</form>
+<div id="link">
+</div>
+</div>
+<script>
+var currentDay = new Date().getDay();
+var daysFromWeds = 0;
+if(currentDay<3){daysFromWeds = 3-currentDay;}
+if(currentDay==3){daysFromWeds = 0;}
+if(currentDay>3){daysFromWeds = 10-currentDay;}
+
+var dt = new Date();
+dt.setDate(dt.getDate()+daysFromWeds);
+
+var year = dt.getFullYear();
+var month = dt.getMonth() + 1;
+var day = dt.getDate(); 
+function updateLink(){	
+	var url_mask = "{% url 'timecard' 9999 8888 7777 6666 %}".replace(9999,document.getElementById("employees").value.toString());
+	url_mask = url_mask.replace(8888, year.toString())
+	url_mask = url_mask.replace(7777, month.toString())
+	url_mask = url_mask.replace(6666, day.toString())
+	//document.getElementById("gobutton").action="http://192.168.0.155:8000/timeentry/summary/"+document.getElementById("jobs").value;
+	document.getElementById("gobutton").action=url_mask;
+}
+updateLink()
+</script>
+{% endblock %}

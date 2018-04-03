@@ -1,0 +1,288 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<script>
+var departments = [];
+{% for department in all_departments %}
+departments.push({Name: "{{department.name}}", Checked: 0, CheckedBy: []});
+{% endfor %}
+var master = [];
+</script>
+<style>
+body {
+    font-size:2.2em;
+}
+table {
+    border-collapse: collapse;
+    font-size:1.2em;
+	page-break-inside: avoid;
+}
+table, th, td {
+    border: 1px solid black;
+	padding:3px;
+}
+</style>
+{% for dept_check in dept_checks %}
+<script>
+for(var i in departments)
+{
+	if(departments[i].Name == "{{dept_check.department}}")
+	{
+		departments[i].Checked += 1;
+		departments[i].CheckedBy.push("{{dept_check.checkedby}}")
+	}
+}
+</script>
+{% endfor %}
+{% for employee in all_employees %}
+<script>master.push({Name: "{{employee.name}}", Num: {{employee.number}}, Dep: "{{employee.department.name}}", Link: "{% url 'timecard' employee.number year month day %}", Regular: 0, OT: 0, DT: 0, Entries: [], satSunOT:false});</script>
+{% if employee.department.name == "Paint"  or employee.number == 817 %}
+<script>
+master[master.length-1].Entries.push({Job: 10, JobName: "Night", Category: "F1", Regular: 0, OT: 0, DT: 0});
+</script>
+<div id="checked" style="font-size:.8em;" class="container">
+</div>
+
+{% endif %}
+{% endfor %}
+<script>
+	for (var i in departments)
+	{
+		if(departments[i].Checked < 2)
+		{
+			document.getElementById("checked").innerHTML += "<span style='color:red'>" + departments[i].Name + " Department checked " + departments[i].Checked + " time(s). 2 checks needed</span> (Checked by ";
+			for(var j in departments[i].CheckedBy)
+			{
+				document.getElementById("checked").innerHTML+= departments[i].CheckedBy[j];
+			}
+			document.getElementById("checked").innerHTML+=")<br>";
+		}
+		else
+		{
+			document.getElementById("checked").innerHTML += "<span style='color:green'>✔" + departments[i].Name + "</span><br>";
+		}
+
+	}
+	</script>
+{% for entry in needed_entries %}
+<script>
+for(var i in master)
+{
+	if(master[i].Name=="{{entry.employee.name}}")
+	{
+		var entryDate = new Date("{{ entry.date.isoformat }}")
+		if((entryDate.getDay() == 6 || entryDate.getDay() == 5) && ({{entry.ot}}>=.5 || {{entry.dt}}>=0.5))
+		{
+			master[i].satSunOT=true;
+		}
+		var found = false;
+		for(var j in master[i].Entries)
+		{
+			if(master[i].Entries[j].Job=="{{entry.job.number}}" && master[i].Entries[j].Category=="{{entry.category}}" && master[i].Entries[j].JobName=="{{entry.job.name}}")
+			{
+				master[i].Entries[j].Regular += {{entry.reg}};
+				master[i].Entries[j].OT += {{entry.ot}};
+				master[i].Entries[j].DT += {{entry.dt}};
+				found = true;
+			}
+		}
+		if(found==false)
+		{
+		master[i].Entries.push({Job: "{{entry.job.number}}", JobName: "{{entry.job.name}}", Category: "{{entry.category}}", Regular: {{entry.reg}}, OT: {{entry.ot}}, DT: {{entry.dt}}})
+		}
+		{% if entry.employee.department.name == "Paint" or entry.employee.number == 817 %}
+		{% if entry.job.number != 1 and entry.job.number != 5 %}
+		for(var j in master[i].Entries)
+		{
+			if(master[i].Entries[j].Job==10 && master[i].Entries[j].Category=="F1" && master[i].Entries[j].JobName=="Night")
+			{
+				master[i].Entries[j].Regular += {{entry.reg}};
+				master[i].Entries[j].OT += {{entry.ot}};
+				master[i].Entries[j].DT += {{entry.dt}};
+			}
+		}
+		{% endif %}
+		{% endif %}
+		master[i].Regular+={{entry.reg}};
+		master[i].OT+={{entry.ot}};
+		master[i].DT+={{entry.dt}};
+	}
+}
+</script>
+{% endfor %}
+<div class="container">
+
+<p style="text-align:center;"><u>Entries for week ending {{last_date}}</u></p><br><br>
+<div id="test1"></div>
+</div>
+<script>
+master.sort(function(a, b) {
+    return (a.Num) - (b.Num);
+});
+function makeRow(person,entry,hours,type){
+	var row = table.insertRow(-1);
+	var cell1 = row.insertCell(-1); //Emp name
+	var cell2 = row.insertCell(-1); //Emp #
+	var cell3 = row.insertCell(-1); //Emp dept
+	var cell4 = row.insertCell(-1); //Job # (blank if code, SERV if service JOB)
+	var cell6 = row.insertCell(-1); //Category or code or service job #
+	var cell7 = row.insertCell(-1); //hrs
+	var cell8 = row.insertCell(-1); //hr type
+	cell1.innerHTML="<a href='"+master[person].Link+"'>"+master[person].Name+"</a>";
+	cell2.innerHTML=master[person].Num;
+	cell3.innerHTML=master[person].Dep;
+	if(master[person].Entries[entry].Job>11 && master[person].Entries[entry].JobName != "Service")
+	{
+	cell4.innerHTML=master[person].Entries[entry].Job;
+	cell6.innerHTML=master[person].Entries[entry].Category;
+	}
+	if(master[person].Entries[entry].JobName=="Service" && parseInt(master[person].Entries[entry].Job)<5000)
+	{
+	cell4.innerHTML="SERV";
+	cell6.innerHTML=master[person].Entries[entry].Job;
+	}
+	if(master[person].Entries[entry].JobName=="Service" && parseInt(master[person].Entries[entry].Job)>=5000)
+	{
+		if(type=="Reg")
+		{
+		cell6.innerHTML="SE1"
+		}
+		if(type=="OT")
+		{
+		cell6.innerHTML="SE2"
+		}
+	}
+	if(master[person].Entries[entry].Job<=11)
+	{
+	cell6.innerHTML=master[person].Entries[entry].JobName;
+	}
+	if(master[person].Entries[entry].Job==0)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="LF1"
+			}
+			if(type=="OT")
+			{
+			cell6.innerHTML="LF2"
+			}
+	}
+	if(master[person].Entries[entry].Job==6)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="SF1"
+			}
+			if(type=="OT")
+			{
+			cell6.innerHTML="SF2"
+			}
+	}
+	if(master[person].Entries[entry].Job==4)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="ET1"
+			}
+			if(type=="OT")
+			{
+			cell6.innerHTML="ET2"
+			}
+	}	
+	if(master[person].Entries[entry].Job==8)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="PL1"
+			}
+			if(type=="OT")
+			{
+			cell6.innerHTML="PL2"
+			}
+	}
+	if(master[person].Entries[entry].Job==10)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="PR1"
+			}
+		if(type=="OT")
+			{
+			cell6.innerHTML="PR2"
+			}
+	}
+	if(master[person].Entries[entry].Job==11)
+	{
+		if(type=="Reg")
+			{
+			cell6.innerHTML="OF1"
+			}
+		if(type=="OT")
+			{
+			cell6.innerHTML="OF2"
+			}
+	}
+	if(master[person].Entries[entry].JobName!="Night")
+	{
+	cell7.innerHTML=hours;
+	cell8.innerHTML=type;
+	}
+	if(master[person].Entries[entry].JobName=="Night")
+	{
+	cell6.innerHTML="FA11";
+	cell7.innerHTML="$"+hours;
+	}
+}
+for(var i in master)
+{
+var table = document.createElement("TABLE");
+
+	for(var j in master[i].Entries)
+	{
+		//if(master[i].Entries[j].Job != 10 && master[i].Entries[j].Job != 11)
+		//{
+			if(master[i].Entries[j].Regular > 0)
+			{
+			makeRow(i,j,master[i].Entries[j].Regular, "Reg");
+			}
+			if(master[i].Entries[j].OT > 0)
+			{
+			makeRow(i,j,master[i].Entries[j].OT, "OT");
+			}
+			if(master[i].Entries[j].DT > 0)
+			{
+			makeRow(i,j,master[i].Entries[j].DT, "DT");
+			}		
+		//}
+	}
+	/*for(var j in master[i].Entries)
+	{
+		if(master[i].Entries[j].Job==10 || master[i].Entries[j].Job==11)
+		{
+			makeRow(i,j,master[i].Entries[j].Regular+master[i].Entries[j].OT+master[i].Entries[j].DT, "Reg");
+		}
+	}*/
+	var row = table.insertRow(-1);
+	var cell1 = row.insertCell(-1);
+	cell1.colSpan = "7";
+	var total = master[i].Regular + master[i].OT + master[i].DT;
+	if(total>0)
+	{
+	cell1.innerHTML="<b>TOTAL: </b>Regular: " + master[i].Regular + ", OT: " + master[i].OT + ", DT: " + master[i].DT + ", Total: " + total;
+	}
+	document.getElementById("test1").appendChild(table);
+	if(total>0)
+	{
+	if(master[i].Regular<40 && master[i].satSunOT==true)
+	{
+		document.getElementById("test1").innerHTML+="<br><b>Weekend OT entered with less than 40 regular hours worked</b><br>";
+	}
+	else
+	{
+		document.getElementById("test1").innerHTML+="<br>";
+	}
+	}	
+}
+</script>
+{% endblock %}

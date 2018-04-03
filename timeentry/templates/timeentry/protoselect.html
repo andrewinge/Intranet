@@ -1,0 +1,25 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+<div class="container">
+Select a job: 
+<select id="jobs" onchange="updateLink()">
+{% for job in all_jobs %}
+<option value="{{job.number}}">{{job.number}} - {{job.customer}} {{job.name}}</option>
+{% endfor %}
+</select>
+<br><br><br>
+<form id="gobutton" action="#">
+    <input type="submit" value="View Summary" />
+</form>
+<div id="link">
+</div>
+</div>
+<script>
+function updateLink(){	
+	var url_mask = "{% url 'proto' 1234 %}".replace(/1234/,document.getElementById("jobs").value.toString());
+	//document.getElementById("gobutton").action="http://192.168.0.155:8000/timeentry/summary/"+document.getElementById("jobs").value;
+	document.getElementById("gobutton").action=url_mask;
+}
+updateLink()
+</script>
+{% endblock %}

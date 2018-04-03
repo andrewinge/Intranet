@@ -1,0 +1,653 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}" />
+<style>
+body {
+}
+table {
+    border-collapse: collapse;
+	page-break-inside: avoid;
+}
+
+table, th, td {
+    border: 1px solid black;
+	padding:3px;
+}
+</style>
+<div id="header" style="text-align:center; font-size:1.5em;"><b>Production Employee hours worked between {{first_date}} and {{last_date}}</b><br></div><br>
+<div id="total" class="col-md-8" style="text-align:center; margin:auto;"></div>
+<div class="col-md-4" style="text-align:center; margin:auto;">
+<table style="margin-left:auto; margin-right:auto; text-align:center;">
+	<tr>
+		<td style="font-weight:bold;">PTO</td><td>Paid Time Off</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">LTSP</td><td>Lost Time</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">LER</td><td>Equipment Repair</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">LRM</td><td>Repairs/Maintenance</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">ET1</td><td>Employee Training</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">LFH</td><td>Holiday/Funeral/Birthday</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">SS</td><td>Shop Supervision</td>
+	</tr>
+	<tr>
+		<td style="font-weight:bold;">SPS</td><td>Shipping/Receiving</td>
+	</tr>
+
+</table>
+</div>
+<div id="first" class="col-md-6"></div>
+<div id="second" class="col-md-6"></div>
+<script>
+var totalEmp = 0;
+var departments = [];
+var totalHrs = 0;
+var totalPTO = 0;
+var totalLTSP = 0;
+var totalLER = 0;
+var totalLRM = 0;
+var totalET1 = 0;
+var totalLFH = 0;
+var totalSS = 0;
+var totalSPS = 0;
+var days = {{days}};
+var weeks = {{days}}/7;
+{% for department in all_departments %}
+departments.push({Department: "{{department}}", Employees:[]});
+{% endfor %}
+{% for employee in all_employees %}
+for(var i in departments)
+{
+	if(departments[i].Department=="{{employee.department.name}}")
+	{
+		departments[i].Employees.push({Name: "{{employee.name}}", Num: {{employee.number}}, Hours: 0, PTO: 0, LTSP: 0, LER: 0, LRM: 0, ET1: 0, LFH: 0, SS: 0, SPS: 0});
+	}
+}
+{% endfor %}
+{% for entry in needed_entries %}
+for(var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department.name}}")
+	{
+		for(var j in departments[i].Employees)
+		{
+			if(departments[i].Employees[j].Name=="{{entry.employee.name}}")
+			{
+				if({{entry.job.number}}==1)
+				{
+					totalPTO+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].PTO+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				} 
+				else if({{entry.job.number}}==0)
+				{
+					totalLTSP+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].LTSP+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==2)
+				{
+					totalLER+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].LER+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==3)
+				{
+					totalLRM+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].LRM+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==4)
+				{
+					totalET1+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].ET1+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==5)
+				{
+					totalLFH+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].LFH+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==6)
+				{
+					totalSS+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].SS+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else if({{entry.job.number}}==7)
+				{
+					totalSPS+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].SPS+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+				else
+				{
+					totalHrs+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+					departments[i].Employees[j].Hours+={{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+				}
+			}
+		}
+	}
+}
+{% endfor %}
+
+var totalEverything = totalHrs+totalPTO+totalLTSP+totalLER+totalLRM+totalET1+totalLFH+totalSS+totalSS+totalSPS;
+</script>
+<div class="container">
+</div>
+<script>
+for (var i in departments) 
+{
+	var tempHrs = 0;
+	var tempPTO = 0;
+	var tempEmps = 0;
+	var tempLTSP = 0;
+	var tempLER = 0;
+	var tempLRM = 0;
+	var tempET1 = 0;
+	var tempLFH = 0;
+	var tempSS = 0;
+	var tempSPS = 0;
+	for(var j in departments[i].Employees)
+	{
+		if(departments[i].Employees[j].Hours != 0 || departments[i].Employees[j].PTO != 0 || departments[i].Employees[j].LTSP != 0 || departments[i].Employees[j].LER != 0 || departments[i].Employees[j].LRM !=0 || departments[i].Employees[j].ET1 !=0 || departments[i].Employees[j].LFH != 0 || departments[i].Employees[j].SS != 0 || departments[i].Employees[j].SPS != 0)
+		{
+			tempEmps+=1;			
+			totalEmp+=1;
+		}
+	}
+	if(tempEmps>0)
+	{
+		var body = document.getElementsByTagName("body")[0];
+		var tbl = document.createElement("table");
+		var tblBody = document.createElement("tbody");
+		var row = document.createElement("tr");
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode(departments[i].Department);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode(tempEmps);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		tblBody.appendChild(row);
+		var row = document.createElement("tr");
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("Name");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("#");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("Total");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("Jobs");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("PTO");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("LTSP");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("LER");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("LRM");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("ET1");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("LFH");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("SS");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("th");
+		var cellText = document.createTextNode("SPS");
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		tblBody.appendChild(row);
+
+		for (var k in departments[i].Employees)
+	  	{
+			tempHrs+=departments[i].Employees[k].Hours;
+			tempPTO+=departments[i].Employees[k].PTO;
+			tempLTSP+=departments[i].Employees[k].LTSP;
+			tempLER+=departments[i].Employees[k].LER;
+			tempLRM+=departments[i].Employees[k].LRM;
+			tempET1+=departments[i].Employees[k].ET1;
+			tempLFH+=departments[i].Employees[k].LFH;
+			tempSS+=departments[i].Employees[k].SS;
+			tempSPS+=departments[i].Employees[k].SPS;
+			if(departments[i].Employees[k].Hours >0 || departments[i].Employees[k].PTO >0)
+			{
+				var row = document.createElement("tr");
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].Name);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].Num);
+				cell.appendChild(cellText);
+				row.appendChild(cell);      
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].Hours+departments[i].Employees[k].PTO+departments[i].Employees[k].LTSP+departments[i].Employees[k].LER+departments[i].Employees[k].LRM+departments[i].Employees[k].ET1+departments[i].Employees[k].LFH+departments[i].Employees[k].SS+departments[i].Employees[k].SPS);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].Hours);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].PTO);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].LTSP);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].LER);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].LRM);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].ET1);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].LFH);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].SS);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				var cell = document.createElement("td");
+				var cellText = document.createTextNode(departments[i].Employees[k].SPS);
+				cell.appendChild(cellText);
+				row.appendChild(cell);
+				tblBody.appendChild(row);
+			}
+		}
+		var row = document.createElement("tr");
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode("Total");
+		cell.style="font-weight:bold;";
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(" ");
+		cell.appendChild(cellText);
+		row.appendChild(cell);   
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempHrs+tempPTO+tempLTSP+tempLER+tempLRM+tempET1+tempLFH+tempSS+tempSPS);
+		cell.appendChild(cellText);
+		row.appendChild(cell);   
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempHrs);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempPTO);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempLTSP);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempLER);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempLRM);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempET1);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempLFH);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempSS);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(tempSPS);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		tblBody.appendChild(row);
+		tbl.appendChild(tblBody);
+		var avgHrsWk = parseFloat(Math.round((tempHrs/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgPTOWk = parseFloat(Math.round((tempPTO/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgLTSPWk = parseFloat(Math.round((tempLTSP/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgLERWk = parseFloat(Math.round((tempLER/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgLRMWk = parseFloat(Math.round((tempLRM/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgET1Wk = parseFloat(Math.round((tempET1/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgLFHWk = parseFloat(Math.round((tempLFH/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgSSWk = parseFloat(Math.round((tempSS/tempEmps/weeks) * 100) / 100).toFixed(1);
+		var avgSPSWk = parseFloat(Math.round((tempSPS/tempEmps/weeks) * 100) / 100).toFixed(1);
+
+		var row = document.createElement("tr");
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode("Per Person Per Week");
+		cell.style="font-weight:bold;";
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(" ");
+		cell.appendChild(cellText);
+		row.appendChild(cell);     
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(parseFloat(Math.round((tempHrs+tempPTO+tempLTSP+tempLER+tempLRM+tempET1+tempLFH+tempSS+tempSPS)/tempEmps/weeks * 100) / 100).toFixed(1));
+		cell.appendChild(cellText);
+		row.appendChild(cell); 
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgHrsWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgPTOWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgLTSPWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgLERWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgLRMWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgET1Wk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgLFHWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgSSWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		var cell = document.createElement("td");
+		var cellText = document.createTextNode(avgSPSWk);
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		tblBody.appendChild(row);
+		tbl.appendChild(tblBody);
+
+		if(i<4)
+		{
+		document.getElementById("first").appendChild(tbl);
+		var linebreak = document.createElement("br");
+		document.getElementById("first").appendChild(linebreak);
+		}
+		else
+		{
+			document.getElementById("second").appendChild(tbl);
+			var linebreak = document.createElement("br");
+			document.getElementById("second").appendChild(linebreak);
+		}
+	 }
+	}
+//total
+	var body = document.getElementsByTagName("body")[0];
+	var tbl = document.createElement("table");
+	var tblBody = document.createElement("tbody");
+	var row = document.createElement("tr");
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode(" ");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("Jobs");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("PTO");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("LTSP");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("LER");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("LRM");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("ET1");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("LFH");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("SS");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("th");
+	var cellText = document.createTextNode("SPS");
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	tblBody.appendChild(row);
+     
+    var row = document.createElement("tr");
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode("Total");	
+	cell.style="font-weight:bold;";
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalHrs);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalPTO);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalLTSP);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalLER);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalLRM);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalET1);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalLFH);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalSS);
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(totalSPS);
+	cell.appendChild(cellText);
+	row.appendChild(cell);	
+	tblBody.appendChild(row);
+
+	var row = document.createElement("tr");
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode("Per Week");	
+	cell.style="font-weight:bold;";
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalHrs/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalPTO/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLTSP/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLER/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLRM/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalET1/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLFH/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSS/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSPS/weeks) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);	
+	tblBody.appendChild(row);
+
+	var row = document.createElement("tr");
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode("Per Week/Person");	
+	cell.style="font-weight:bold;";
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalHrs/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalPTO/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLTSP/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLER/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLRM/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalET1/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLFH/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSS/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSPS/weeks/totalEmp) * 100) / 100).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);	
+	tblBody.appendChild(row);
+
+	var row = document.createElement("tr");
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode("% of Total");	
+	cell.style="font-weight:bold;";
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalHrs/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalPTO/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLTSP/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLER/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLRM/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalET1/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalLFH/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSS/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);
+	var cell = document.createElement("td");
+	var cellText = document.createTextNode(parseFloat(Math.round((totalSPS/totalEverything) * 100)).toFixed(1));
+	cell.appendChild(cellText);
+	row.appendChild(cell);	
+	tblBody.appendChild(row);
+
+	tbl.appendChild(tblBody);
+	tbl.style="margin:auto;"
+	document.getElementById("total").innerHTML=totalEmp + " employees, " + totalEverything + " total hours<br>";
+	document.getElementById("total").appendChild(tbl);
+	var linebreak = document.createElement("br");
+	document.getElementById("total").appendChild(linebreak)
+
+</script>
+{% endblock %}

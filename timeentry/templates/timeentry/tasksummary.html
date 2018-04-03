@@ -1,0 +1,53 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}" />
+<script>
+var departments = [];
+</script>
+{% for department in all_departments %}
+<script>departments.push({Department: "{{department}}", Hours:0});</script>
+{% endfor %}
+
+<p id="header" style="text-align:center">
+	<b>{{job.number}} - {{job.customer}} {{job.name}}: 
+	{% for task in task %}
+	Entries for {{task.name}}
+	{% endfor %}
+	</b>
+</p>
+<div class="container">
+	<div class="row">
+		<div class="col-md-8">
+			<br>
+
+			<table style="border:1px solid black">
+				<tr><th>Employee</th><th>Reg</th><th>OT</th><th>DT</th><th>Date</th></tr>
+			{% for entry in needed_entries %}
+			<script>
+			for (var i in departments)
+			{
+				if(departments[i].Department=="{{entry.employee.department}}")
+				{
+					departments[i].Hours += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+				}
+			}
+			</script>
+			<tr><td>{{entry.employee.name}}</td><td>{{entry.reg}}</td><td>{{entry.ot}}</td><td>{{entry.dt}}</td><td>{{entry.date}}</td></tr>
+			{% endfor %}
+		</div>
+		<div class="col-md-4">
+			<div id="bydepartment">
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+for(var i in departments)
+{
+	document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].Hours + "<br>";
+}
+document.getElementById("bydepartment").innerHTML+="<br><br>";
+</script>
+<a href="{% url 'summary' job.number %}">Back</a>
+{% endblock %}

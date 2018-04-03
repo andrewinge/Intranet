@@ -1,0 +1,21 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+<script>var total=0;</script>
+<div class="container">
+<table border="1" id="jobs" style="text-align:left;">
+			<tr>
+				<th>Job#</th>
+				<th>Customer</th>
+				<th>Name</th>
+				<th>Salesperson</th>
+				<th>Value</th>
+			</tr>
+{% for job in needed_jobs %}
+<tr><td>{{job.number}}</td><td>{{job.customer.name}}</td><td>{{job.name}}</td><td>{{job.salesperson.name}}</td><td>{{job.value}}</td></tr>
+<script>total+={{job.value}}</script>
+{% endfor %}
+
+<div id="total">Total sold between {{first_date}} and {{last_date}}: <b>$</div>
+</div>
+<script>document.getElementById("total").innerHTML+="<b>"+total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+"</b><br><br>";</script>
+{% endblock %}

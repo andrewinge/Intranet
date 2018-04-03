@@ -1,0 +1,169 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+<div class="head" style="font-size: 1.5em; text-align:center;">{{vendor}} for week ending {{last_date}}</div>
+<style>
+html { font-size:1.2em;}
+</style>
+<script>
+var byEmployee = [];
+</script>
+
+{% for employee in needed_employees %}
+<script>byEmployee.push({Name: "{{employee.name}}", Num: {{employee.number}}, Dep: "{{employee.department.name}}", Regular: 0, OT: 0, DT: 0, regRate: {{employee.reg}}, otRate: {{employee.ot}}, Entries: [], satSunOT:false});</script>
+{% endfor %}
+
+{% for entry in needed_entries %}
+{% if entry.employee.employer.name == vendor %}
+<script>
+for(var i in byEmployee)
+{
+	if(byEmployee[i].Name=="{{entry.employee.name}}")
+	{
+		var found = false;
+		for(var j in byEmployee[i].Entries)
+		{
+			if(byEmployee[i].Entries[j].Job=="{{entry.job.number}}" && byEmployee[i].Entries[j].Category=="{{entry.category}}" && byEmployee[i].Entries[j].JobName=="{{entry.job.name}}")
+			{
+				byEmployee[i].Entries[j].Regular += {{entry.reg}};
+				byEmployee[i].Entries[j].OT += {{entry.ot}};
+				byEmployee[i].Entries[j].DT += {{entry.dt}};
+				found = true;
+			}
+		}
+		if(found==false)
+		{
+		byEmployee[i].Entries.push({Job: "{{entry.job.number}}", JobName: "{{entry.job.name}}", Category: "{{entry.category}}", Regular: {{entry.reg}}, OT: {{entry.ot}}});
+		}
+		byEmployee[i].Regular+={{entry.reg}};
+		byEmployee[i].OT+={{entry.ot}};
+		byEmployee[i].DT+={{entry.dt}};
+	}
+}
+</script>
+{% endif %}
+{% endfor %}
+<script>
+var master = [];
+var cost = 0;
+</script>
+{% for entry in needed_entries %}
+{% if entry.employee.employer.name == vendor %}
+<script>
+var thisCost = {{entry.employee.reg}}*{{entry.reg}}+{{entry.employee.ot}}*{{entry.ot}};
+cost += thisCost;
+var jobFound=false;
+for(var i in master)
+{
+	if(master[i].Job=={{entry.job.number}})
+	{
+		master[i].{{entry.category.name}}+=thisCost;
+		master[i].{{entry.category.name}}hours+={{entry.reg}}+{{entry.ot}};
+		jobFound=true;
+	}
+}
+if(jobFound==false)
+{
+	master.push({Job: {{entry.job.number}}, Name: "{{entry.job.name}}", V1: 0, V2: 0, V3: 0, H1: 0, H2: 0, H3: 0, F1: 0, F2: 0, F3: 0, I1: 0, I2: 0, I3: 0, V1hours: 0, V2hours: 0, V3hours: 0, H1hours: 0, H2hours: 0, H3hours: 0, F1hours: 0, F2hours: 0, F3hours: 0, I1hours: 0, I2hours: 0, I3hours: 0})
+	for(var i in master)
+	{
+		if(master[i].Job=={{entry.job.number}})
+	{
+		master[i].{{entry.category.name}}+=thisCost;
+		master[i].{{entry.category.name}}hours+={{entry.reg}}+{{entry.ot}};
+		jobFound=true;
+	}
+	}
+}
+</script>
+{% endif %}
+{% endfor %}
+<div class="container">
+<div id="output" style="page-break-after: always"></div>
+<script>
+for(var i in master)
+{
+	if(master[i].Job>10 && master[i].Name != "Service")
+	{
+	if(master[i].V1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 601: </b>$" + Math.round(master[i].V1 * 100) / 100+" - " + master[i].V1hours+" hours<br>";}	
+	if(master[i].V2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 602: </b>$" + Math.round(master[i].V2 * 100) / 100+" - " + master[i].V2hours+" hours<br>";}
+	if(master[i].V3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 603: </b>$" + Math.round(master[i].V3 * 100) / 100+" - " + master[i].V3hours+" hours<br>";}
+	if(master[i].H1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 301: </b>$" + Math.round(master[i].H1 * 100) / 100+" - " + master[i].H1hours+" hours<br>";}	
+	if(master[i].H2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 302: </b>$" + Math.round(master[i].H2 * 100) / 100+" - " + master[i].H2hours+" hours<br>";}
+	if(master[i].H3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 303: </b>$" + Math.round(master[i].H3 * 100) / 100+" - " + master[i].H3hours+" hours<br>";}
+	if(master[i].F1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 201: </b>$" + Math.round(master[i].F1 * 100) / 100+" - " + master[i].F1hours+" hours<br>";}	
+	if(master[i].F2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 202: </b>$" + Math.round(master[i].F2 * 100) / 100+" - " + master[i].F2hours+" hours<br>";}
+	if(master[i].F3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 203: </b>$" + Math.round(master[i].F3 * 100) / 100+" - " + master[i].F3hours+" hours<br>";}
+	if(master[i].I1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 401: </b>$" + Math.round(master[i].I1 * 100) / 100+" - " + master[i].I1hours+" hours<br>";}	
+	if(master[i].I2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 402: </b>$" + Math.round(master[i].I2 * 100) / 100+" - " + master[i].I2hours+" hours<br>";}
+	if(master[i].I3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job+" - 403: </b>$" + Math.round(master[i].I3 * 100) / 100+" - " + master[i].I3hours+" hours<br>";}
+	}
+	else if(master[i].Job<=10 && master[i].Name != "Service")
+	{
+		if(master[i].V1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 601: </b>$" + Math.round(master[i].V1 * 100) / 100+" - " + master[i].V1hours+" hours<br>";}	
+	if(master[i].V2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 602: </b>$" + Math.round(master[i].V2 * 100) / 100+" - " + master[i].V2hours+" hours<br>";}
+	if(master[i].V3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 603: </b>$" + Math.round(master[i].V3 * 100) / 100+" - " + master[i].V3hours+" hours<br>";}
+	if(master[i].H1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 301: </b>$" + Math.round(master[i].H1 * 100) / 100+" - " + master[i].H1hours+" hours<br>";}	
+	if(master[i].H2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 302: </b>$" + Math.round(master[i].H2 * 100) / 100+" - " + master[i].H2hours+" hours<br>";}
+	if(master[i].H3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 303: </b>$" + Math.round(master[i].H3 * 100) / 100+" - " + master[i].H3hours+" hours<br>";}
+	if(master[i].F1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 201: </b>$" + Math.round(master[i].F1 * 100) / 100+" - " + master[i].F1hours+" hours<br>";}	
+	if(master[i].F2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 202: </b>$" + Math.round(master[i].F2 * 100) / 100+" - " + master[i].F2hours+" hours<br>";}
+	if(master[i].F3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 203: </b>$" +Math.round(master[i].F3 * 100) / 100+" - " + master[i].F3hours+" hours<br>";}
+	if(master[i].I1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 401: </b>$" + Math.round(master[i].I1 * 100) / 100+" - " + master[i].I1hours+" hours<br>";}	
+	if(master[i].I2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 402: </b>$" + Math.round(master[i].I2 * 100) / 100+" - " + master[i].I2hours+" hours<br>";}
+	if(master[i].I3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Name+" - 403: </b>$" +Math.round(master[i].I3 * 100) / 100+" - " + master[i].I3hours+" hours<br>";}
+	}
+	else
+	{
+	if(master[i].V1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 601: </b>$" + Math.round(master[i].V1 * 100) / 100+" - " + master[i].V1hours+" hours<br>";}	
+	if(master[i].V2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 602: </b>$" + Math.round(master[i].V2 * 100) / 100+" - " + master[i].V2hours+" hours<br>";}
+	if(master[i].V3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 603: </b>$" + Math.round(master[i].V3 * 100) / 100+" - " + master[i].V3hours+" hours<br>";}
+	if(master[i].H1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 301: </b>$" + Math.round(master[i].H1 * 100) / 100+" - " + master[i].H1hours+" hours<br>";}	
+	if(master[i].H2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 302: </b>$" + Math.round(master[i].H2 * 100) / 100+" - " + master[i].H2hours+" hours<br>";}
+	if(master[i].H3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 303: </b>$" + Math.round(master[i].H3 * 100) / 100+" - " + master[i].H3hours+" hours<br>";}
+	if(master[i].F1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 201: </b>$" + Math.round(master[i].F1 * 100) / 100+" - " + master[i].F1hours+" hours<br>";}	
+	if(master[i].F2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 202: </b>$" + Math.round(master[i].F2 * 100) / 100+" - " + master[i].F2hours+" hours<br>";}
+	if(master[i].F3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 203: </b>$" + Math.round(master[i].F3 * 100) / 100+" - " + master[i].F3hours+" hours<br>";}
+	if(master[i].I1>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 401: </b>$" + Math.round(master[i].I1 * 100) / 100+" - " + master[i].I1hours+" hours<br>";}	
+	if(master[i].I2>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 402: </b>$" + Math.round(master[i].I2 * 100) / 100+" - " + master[i].I2hours+" hours<br>";}
+	if(master[i].I3>0){document.getElementById("output").innerHTML+="<b>"+master[i].Job + " " + master[i].Name+" - 403: </b>$" + Math.round(master[i].I3 * 100) / 100+" - " + master[i].I3hours+" hours<br>";}
+	}
+}
+
+	document.getElementById("output").innerHTML+="<br><br><b><u>Total Cost:</b></u> $"+Math.round(cost * 100) / 100 + "<br><br><br>";
+</script>
+	<div class="head" style="font-size: 1.5em; text-align:center;">{{vendor}} for week ending {{last_date}}</div><br>
+<div id="test1">
+</div>
+</div>
+<script>
+byEmployee.sort(function(a, b) {
+    return (a.Num) - (b.Num);
+});
+for(var i in byEmployee)
+{
+	for(var j in byEmployee[i].Entries)
+	{
+		if(byEmployee[i].Entries[j].JobName=="Service")
+		{
+			document.getElementById("test1").innerHTML+=byEmployee[i].Name + " - " + byEmployee[i].Num + " - " + byEmployee[i].Dep + " - " + byEmployee[i].Entries[j].Job + " " + byEmployee[i].Entries[j].JobName + " - " + byEmployee[i].Entries[j].Regular + " | " + byEmployee[i].Entries[j].OT + "<br>";
+		}
+		else if(byEmployee[i].Entries[j].Job == "0" || byEmployee[i].Entries[j].Job == "1" || byEmployee[i].Entries[j].Job == "2" || byEmployee[i].Entries[j].Job == "3" || byEmployee[i].Entries[j].Job == "4" || byEmployee[i].Entries[j].Job == "5" || byEmployee[i].Entries[j].Job == "6" || byEmployee[i].Entries[j].Job == "7")
+		{
+			document.getElementById("test1").innerHTML+=byEmployee[i].Name + " - " + byEmployee[i].Num + " - " + byEmployee[i].Dep + " - " + byEmployee[i].Entries[j].JobName + " - " + byEmployee[i].Entries[j].Regular + " | " + byEmployee[i].Entries[j].OT + " | " + "<br>";
+		}
+		else
+		{
+	document.getElementById("test1").innerHTML+=byEmployee[i].Name + " - " + byEmployee[i].Num + " - " + byEmployee[i].Dep + " - " + byEmployee[i].Entries[j].Job+" - " + byEmployee[i].Entries[j].Category + " - " + byEmployee[i].Entries[j].Regular + " | " + byEmployee[i].Entries[j].OT + " | " + "<br>";
+		}
+		
+	}
+	var total = byEmployee[i].Regular + byEmployee[i].OT + byEmployee[i].DT;
+	if(total>0)
+	{
+	document.getElementById("test1").innerHTML+="<b>TOTAL: </b>Regular: " + byEmployee[i].Regular + ", OT: " + byEmployee[i].OT + ", DT: " + byEmployee[i].DT + ", Total: " + total;
+		document.getElementById("test1").innerHTML+="<br>";
+		document.getElementById("test1").innerHTML+="<b>Cost: </b> Reg: $" + parseFloat(Math.round((byEmployee[i].regRate * byEmployee[i].Regular) * 100) / 100).toFixed(2) + " OT: $" + parseFloat(Math.round((byEmployee[i].otRate * byEmployee[i].OT) * 100) / 100).toFixed(2)+ "<br><br>";
+	}
+}
+</script>
+{% endblock %}

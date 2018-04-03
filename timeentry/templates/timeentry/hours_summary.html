@@ -1,0 +1,507 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}"/>
+<style>
+@media print {
+   .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+        float: left;
+   }
+   .col-sm-12 {
+        width: 100%;
+   }
+   .col-sm-11 {
+        width: 91.66666667%;
+   }
+   .col-sm-10 {
+        width: 83.33333333%;
+   }
+   .col-sm-9 {
+        width: 75%;
+   }
+   .col-sm-8 {
+        width: 66.66666667%;
+   }
+   .col-sm-7 {
+        width: 58.33333333%;
+   }
+   .col-sm-6 {
+        width: 50%;
+   }
+   .col-sm-5 {
+        width: 41.66666667%;
+   }
+   .col-sm-4 {
+        width: 33.33333333%;
+   }
+   .col-sm-3 {
+        width: 25%;
+   }
+   .col-sm-2 {
+        width: 16.66666667%;
+   }
+   .col-sm-1 {
+        width: 8.33333333%;
+   }
+}
+</style>
+<script>
+function downloadCSV(csv, filename) {
+    var csvFile;
+    var downloadLink;
+
+    // CSV file
+    csvFile = new Blob([csv], {type: "text/csv"});
+
+    // Download link
+    downloadLink = document.createElement("a");
+
+    // File name
+    downloadLink.download = filename;
+
+    // Create a link to the file
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+
+    // Hide download link
+    downloadLink.style.display = "none";
+
+    // Add the link to DOM
+    document.body.appendChild(downloadLink);
+
+    // Click download link
+    downloadLink.click();
+}
+function exportTableToCSV(filename) {
+    var csv = [];
+    var rows = document.querySelectorAll(".csv");
+    
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+        
+        for (var j = 0; j < cols.length; j++) 
+            row.push(cols[j].innerText);
+        
+        csv.push(row.join(","));        
+    }
+
+    // Download CSV file
+    downloadCSV(csv.join("\n"), filename);
+}
+var total_hours = 0;
+var total_estimated = 0;
+var v1 = [];
+var v2 = [];
+var v3 = [];
+var h1 = [];
+var h2 = [];
+var h3 = [];
+var f1 = [];
+var f2 = [];
+var f3 = [];
+var v1est = 0;
+var v2est = 0;
+var v3est = 0;
+var h1est = 0;
+var h2est = 0;
+var h3est = 0;
+var f1est = 0;
+var f2est = 0;
+var f3est = 0;
+var v1act = 0;
+var v2act = 0;
+var v3act = 0;
+var h1act = 0;
+var h2act = 0;
+var h3act = 0;
+var f1act = 0;
+var f2act = 0;
+var f3act = 0;
+
+var departments = [];
+var categories = [];
+var groups = [];
+</script>
+<div class="container">
+<b><u>
+<p style="text-align:center;">{{job.number}} - {{job.customer}} {{job.name}}
+</b></u></p>
+
+{% for group in all_groups %}
+<script>groups.push({Group: "{{group.number}}", GroupName: "{{group.name}}", Est: 0, Hours:0});</script>
+{% endfor %}
+{% for department in all_departments %}
+<script>departments.push({Department: "{{department}}", V1:0, V2:0, V3:0, H1:0, H2:0, H3:0, F1:0, F2:0, F3:0});</script>
+{% endfor %}
+{% for task in all_tasks %}
+<script>
+if("{{job.v1}}"=="True"){v1.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.v2}}"=="True"){v2.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.v3}}"=="True"){v3.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.h1}}"=="True"){h1.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.h2}}"=="True"){h2.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.h3}}"=="True"){h3.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.f1}}"=="True"){f1.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.f2}}"=="True"){f2.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+if("{{job.f3}}"=="True"){f3.push({Task: "{{task.name}}", TaskName: "{{task.description}}", Group: "{{task.group.number}}", GroupName: "{{task.group.name}}", Estimated:0,Used:0});}
+</script>
+{% endfor %}
+{% for estimate in all_estimates %}
+<script>
+for(var i in groups){if(groups[i].Group=="{{estimate.task.group.number}}" && groups[i].GroupName=="{{estimate.task.group.name}}")
+{
+	groups[i].Est += {{estimate.hours}};
+}}
+//Puts estimates in their category's array
+for (var i in v1){if(v1[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="V1"){v1[i].Estimated+={{estimate.hours}};}}
+for (var i in v2){if(v2[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="V2"){v2[i].Estimated+={{estimate.hours}};}}
+for (var i in v3){if(v3[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="V3"){v3[i].Estimated+={{estimate.hours}};}}
+for (var i in h1){if(h1[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="H1"){h1[i].Estimated+={{estimate.hours}};}}
+for (var i in h2){if(h2[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="H2"){h2[i].Estimated+={{estimate.hours}};}}
+for (var i in h3){if(h3[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="H3"){h3[i].Estimated+={{estimate.hours}};}}
+for (var i in f1){if(f1[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="F1"){f1[i].Estimated+={{estimate.hours}};}}
+for (var i in f2){if(f2[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="F2"){f2[i].Estimated+={{estimate.hours}};}}
+for (var i in f3){if(f3[i].Task=="{{estimate.task.name}}" && "{{estimate.category.name}}"=="F3"){f3[i].Estimated+={{estimate.hours}};}}
+</script>
+{% endfor %}
+{% for entry in needed_entries %}
+<script>
+//Puts used tasks in their category's array
+{% if entry.category.name == "V1" %}
+for (var i in v1){if(v1[i].Task=="{{entry.task.name}}"){v1[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].V1 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "V2" %}
+for (var i in v2){if(v2[i].Task=="{{entry.task.name}}"){v2[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+	for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].V2 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "V3" %}
+for (var i in v3){if(v3[i].Task=="{{entry.task.name}}"){v3[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].V3 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "H1" %}
+for (var i in h1){if(h1[i].Task=="{{entry.task.name}}"){h1[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].H1 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "H2" %}
+for (var i in h2){if(h2[i].Task=="{{entry.task.name}}"){h2[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].H2 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "H3" %}
+for (var i in h3){if(h3[i].Task=="{{entry.task.name}}"){h3[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].H3 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "F1" %}
+for (var i in f1){if(f1[i].Task=="{{entry.task.name}}"){f1[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].F1 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "F2" %}
+for (var i in f2){if(f2[i].Task=="{{entry.task.name}}"){f2[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].F2 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+{% if entry.category.name == "F3" %}
+for (var i in f3){if(f3[i].Task=="{{entry.task.name}}"){f3[i].Used += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};}}
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].F3 += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endif %}
+for (var i in groups)
+{
+	if(groups[i].Group=="{{entry.task.group.number}}" && groups[i].GroupName=="{{entry.task.group.name}}")
+	{
+		groups[i].Hours += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+</script>
+{% endfor %}
+<div class="row">
+	<div class="col-sm-5">
+		<br>
+		<table border="1" id="v1" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>V1 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="v2" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>V2 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="v3" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>V3 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="h1" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>H1 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="h2" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>H2 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="h3" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>H3 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="f1" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>F1 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="f2" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>F2 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+		<table border="1" id="f3" style="text-align:left; display:none">
+			<tr class="csv"><th><b><u>F3 Hours By Task Code</b></u></th></tr>
+			<tr class="csv">
+				<th>Task</th>
+				<th>Est</th>
+				<th>Act</th>
+				<th>%</th>
+			</tr>
+		</table>
+		<br>
+	</div>
+	<div class="col-sm-4">
+		<br>
+		<div id="bycategory">
+			<b><u>Hours Used By Category</b></u>
+		<br>
+		</div>
+		<br>
+		<div id="bygroup">
+			<b><u>Hours Used By Group</b></u><br>
+		</div>
+		<br>
+		</div>
+		<div class="col-sm-3">
+			<br>
+			<div id="bydepartment">
+				<b><u>Hours Used By Department</u></b><br><br></div>
+				<br><br>
+			</div>
+		</div>
+<button onclick="exportTableToCSV('data.csv')">Download as .csv</button>
+<a href="{% url 'selection' %}">Back</a></li>
+<br><br>
+<script>
+function addTables(cat, catId, catest, catact)
+{
+if(cat.length>0)
+{
+document.getElementById(catId).style.display="table";
+for (var i in cat){
+	if(cat[i].Estimated > 0 || cat[i].Used > 0){
+		catest +=cat[i].Estimated;
+		catact +=cat[i].Used;
+		if(cat[i].Estimated>0){var percentage = parseInt(cat[i].Used/cat[i].Estimated * 100);}
+			else{percentage="";}
+		document.getElementById(catId).innerHTML+="<tr class='csv'><td><a href='{% url 'summary' job.number %}/"+cat[i].Task + "'>"+cat[i].Task+ " " + cat[i].TaskName + "</td><td>" + cat[i].Estimated + "</td><td>" + cat[i].Used + "</td><td>" + percentage + "%</td></tr>";
+	}
+}
+var percentage = parseInt(catact/catest * 100);
+document.getElementById(catId).innerHTML+="<td></td><td>"+catest+"</td><td>"+catact+"</td><td>"+percentage+"%</td></tr>";
+document.getElementById("bycategory").innerHTML+=catId + ": "+ catact +" of " + catest + "<br>";
+}
+}
+addTables(v1, "v1", v1est, v1act);
+addTables(v2, "v2", v2est, v2act);
+addTables(v3, "v3", v3est, v3act);
+addTables(h1, "h1", h1est, h1act);
+addTables(h2, "h2", h2est, h2act);
+addTables(h3, "h3", h3est, h3act);
+addTables(f1, "f1", f1est, f1act);
+addTables(f2, "f2", f2est, f2act);
+addTables(f3, "f3", f3est, f3act);
+</script>
+	
+<script>
+if(v1.length>0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>V1:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].V1 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(v2.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>V2:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].V2 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(v3.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>V3:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].V3 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(h1.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>H1:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].H1 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(h2.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>H2:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].H2 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(h3.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>H3:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].H3 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(f1.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>F1:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].F1 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(f2.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>F2:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].F2 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+if(f3.length > 0)
+{
+	document.getElementById("bydepartment").innerHTML+="<b><u>F3:</u></b><br>";
+	for(var i in departments)
+	{
+		document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].F3 + "<br>";
+	}
+	document.getElementById("bydepartment").innerHTML+="<br>";
+}
+for(var i in groups)
+{
+	if (groups[i].Hours>0)
+	{
+		if (groups[i].Est>0){var percent = groups[i].Hours/groups[i].Est*100;}
+		else{var percent = 100;}
+		document.getElementById("bygroup").innerHTML+="<b>"+groups[i].Group + " - " + groups[i].GroupName + ":</b> " + groups[i].Hours + " of " + groups[i].Est + " (" + parseInt(percent) + "%)<br>";
+	}
+}
+</script>
+{% endblock %}

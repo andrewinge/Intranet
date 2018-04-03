@@ -1,0 +1,26 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}" />
+<script> var total=0;
+</script>
+<div class="container">
+<div id="total" style="text-align:center"></div>
+<table style="border:1px solid black">
+				<tr><th>Reg</th><th>OT</th><th>DT</th><th>Date</th></tr>
+			{% for entry in needed_entries %}
+			<tr><td>{{entry.reg}}</td><td>{{entry.ot}}</td><td>{{entry.dt}}</td><td>{{entry.date}}</td></tr>
+			{% endfor %}
+</table>
+</div>
+<script>
+{% for entry in needed_entries %}
+total += {{entry.reg}}+{{entry.ot}}+{{entry.dt}};
+{% endfor %}
+</script>
+<script>
+{% for people in person %}
+document.getElementById("total").innerHTML="<b>"+total + " LTSP hours used by {{people.name}} between {{first_date}} and {{last_date}}</b><br><br>";
+{% endfor %}
+</script>
+{% endblock %}

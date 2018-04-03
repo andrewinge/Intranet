@@ -1,0 +1,68 @@
+{% extends 'timeentry/base.html' %}
+{% block body %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}" />
+<div class="container">
+	<div style="text-align:center; font-size:1.5em;"><b>LTSP Entries between {{first_date}} and {{last_date}}</b></div><br>
+<div class="col-md-4" id="bydepartment"></div>
+<script>
+var departments = [];
+var employees = [];
+var total = 0;
+{% for department in all_departments %}departments.push({Department: "{{department}}", Hours:0});
+{% endfor %}
+{% for employee in all_employees %}employees.push({Employee: "{{employee.name}}", Num: "{{employee.number}}", Hours:0});
+{% endfor %}
+</script>
+<script>
+{% for entry in needed_entries %}
+
+total += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+for (var i in departments)
+{
+	if(departments[i].Department=="{{entry.employee.department}}")
+	{
+		departments[i].Hours += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+for (var i in employees)
+{
+	if(employees[i].Employee=="{{entry.employee.name}}")
+	{
+		//employees[i].Hours += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+	}
+}
+{% endfor %}
+</script>
+<div class="col-md-8">
+<table style="border:1px solid black">
+				<tr><th>Employee</th><th>Reg</th><th>OT</th><th>DT</th><th>Date</th></tr>
+			{% for entry in needed_entries %}
+			<script>
+			for (var i in departments)
+			{
+				if(departments[i].Department=="{{entry.employee.department}}")
+				{
+					//departments[i].Hours += {{entry.reg}} + {{entry.ot}} + {{entry.dt}};
+				}
+			}
+			</script>
+			<tr><td><a href="{% url 'empltsp' entry.employee.number year month day year2 month2 day2 %}">{{entry.employee.name}}</td><td>{{entry.reg}}</td><td>{{entry.ot}}</td><td>{{entry.dt}}</td><td>{{entry.date}}</td></tr>
+			{% endfor %}
+</table>
+</div>
+</div>
+<br><br>
+<script>
+for(var i in departments)
+{
+	document.getElementById("bydepartment").innerHTML+="<b>"+departments[i].Department + ":</b> " + departments[i].Hours + "<br>";
+}
+document.getElementById("bydepartment").innerHTML+="<br>";
+for(var i in employees)
+{
+	//document.getElementById("bydepartment").innerHTML+="<b>"+employees[i].Employee + ":</b> " + employees[i].Hours + "<br>";
+}
+document.getElementById("bydepartment").innerHTML+="<b>Total: </b>" + total + "<br><br>";
+</script>
+{% endblock %}
